@@ -11,7 +11,7 @@ import Link from 'next/link';
 
 export default function UserMenu() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const ref = useRef(null);
@@ -139,7 +139,7 @@ export default function UserMenu() {
     setIsOpen(false);
     setIsSettingsOpen(false);
     
-    // Gereksiz debug logu kaldırıyorum
+    console.log('UserMenu: Yönlendirme yapılıyor -', path);
     
     // Next.js router kullanarak yönlendirme yap - doğrudan çağrı
     try {
@@ -151,6 +151,71 @@ export default function UserMenu() {
       console.error('UserMenu: Yönlendirme hatası -', error.message);
       // Hata durumunda window.location ile yönlendir
       window.location.href = path;
+    }
+  };
+
+  // Merkezi logout fonksiyonu
+  const handleLogout = async () => {
+    try {
+      console.log('UserMenu: Oturum kapatma işlemi başlatıldı');
+      
+      // UI durumunu hemen güncelle
+      setIsOpen(false);
+      
+      // LocalStorage ve diğer depoları tamamen temizle
+      localStorage.removeItem('cyberly_user');
+      localStorage.removeItem('cyberly_token');
+      sessionStorage.removeItem('cyberly_user');
+      sessionStorage.removeItem('cyberly_token');
+      
+      // Tüm sibergercek ile ilgili lokalstroage verilerini temizle
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('cyberly_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Tüm cookie'leri temizle
+      document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie.split(';').forEach(cookie => {
+        const eqPos = cookie.indexOf('=');
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+      
+      // Özel olay tetikle - diğer bileşenlerin güncellenebilmesi için
+      const authEvent = new CustomEvent(AUTH_CHANGE_EVENT, { 
+        detail: { user: null, loggedIn: false } 
+      });
+      window.dispatchEvent(authEvent);
+      
+      try {
+        // Auth context üzerinden çıkış işlemi
+        await logout();
+        console.log('UserMenu: Context logout işlemi başarıyla tamamlandı');
+      } catch (apiError) {
+        console.error('UserMenu: Context logout işleminde hata -', apiError.message);
+        // API hatası olsa bile kullanıcı çıkış yapmış olacak
+      }
+      
+      // Tamamen sayfayı yeniden yükleyerek giriş sayfasına yönlendir
+      console.log('UserMenu: Oturum başarıyla kapatıldı, giriş sayfasına yönlendiriliyor...');
+      setTimeout(() => {
+        window.location.replace('/giris?fresh=' + new Date().getTime());
+      }, 100);
+    } catch (error) {
+      console.error('UserMenu: Oturum kapatma işleminde hata -', error.message);
+      // Hata durumunda da temizlik işlemlerini yap ve yönlendir
+      localStorage.clear();
+      sessionStorage.clear();
+      document.cookie.split(';').forEach(cookie => {
+        const eqPos = cookie.indexOf('=');
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+      setTimeout(() => {
+        window.location.replace('/giris?fresh=' + new Date().getTime());
+      }, 100);
     }
   };
 
@@ -205,9 +270,9 @@ export default function UserMenu() {
           {/* Menü öğeleri */}
           <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button">
             {/* Ayarlar Butonu */}
-            <button
-              className="group flex items-center w-full text-left px-4 py-2 text-sm text-gray-100 hover:bg-gray-700"
-              onClick={() => handleNavigation('/ayarlar')}
+            <Link
+              href="/ayarlar"
+              className="group flex items-center w-full text-left px-4 py-2 text-sm text-gray-100 hover:bg-gray-700 transition-colors duration-200"
               role="menuitem"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400 group-hover:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -215,100 +280,62 @@ export default function UserMenu() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               Ayarlar
-            </button>
+            </Link>
           </div>
           
           {/* Admin menüsü */}
           {isUserAdmin && (
             <div className="py-1">
-              <button
+              <Link
+                href="/admin-panel"
                 className="group flex items-center w-full text-left px-4 py-2 text-sm text-gray-100 hover:bg-gray-700"
-                onClick={() => handleNavigation('/admin-panel')}
               >
                 <FaShieldAlt className="h-5 w-5 mr-3 text-gray-400 group-hover:text-cyan-400" />
                 ADMİN Paneli
-              </button>
+              </Link>
             </div>
           )}
           
           {/* Çıkış */}
           <div className="py-1 border-t border-gray-700">
-            <button
-              type="button"
+            <a 
+              href="#" 
               className="group flex items-center w-full text-left px-4 py-3 text-sm text-white hover:bg-red-600 hover:text-white transition-colors duration-200 cursor-pointer font-medium"
-              onClick={() => {
-                console.log('UserMenu: Oturumu Kapat butonuna tıklandı');
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('UserMenu: Çıkış butonuna tıklandı, oturum kapatılıyor...');
                 
-                // UI durumunu hemen güncelle
-                setIsOpen(false);
+                // Tüm yerel depoları temizle
+                localStorage.clear();
+                sessionStorage.clear();
                 
-                // Logout işlemini gerçekleştir
-                const performLogout = async () => {
-                  try {
-                    // LocalStorage ve diğer depoları tamamen temizle
-                    localStorage.removeItem('cyberly_user');
-                    localStorage.removeItem('cyberly_token');
-                    sessionStorage.removeItem('cyberly_user');
-                    sessionStorage.removeItem('cyberly_token');
-                    
-                    // Tüm sibergercek ile ilgili lokalstroage verilerini temizle
-                    Object.keys(localStorage).forEach(key => {
-                      if (key.startsWith('cyberly_')) {
-                        localStorage.removeItem(key);
-                      }
-                    });
-                    
-                    // Tüm cookie'leri temizle
-                    document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                    document.cookie.split(';').forEach(cookie => {
-                      const eqPos = cookie.indexOf('=');
-                      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-                      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-                    });
-                    
-                    // Özel olay tetikle - diğer bileşenlerin güncellenebilmesi için
-                    const authEvent = new CustomEvent(AUTH_CHANGE_EVENT, { 
-                      detail: { user: null, loggedIn: false } 
-                    });
-                    window.dispatchEvent(authEvent);
-                    
-                    try {
-                      // API üzerinden çıkış işlemi - token cookie'sini temizler
-                      await fetch('/api/auth/logout', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                        credentials: 'include',
-                      });
-                    } catch (apiError) {
-                      console.error('UserMenu: API logout işlemi başarısız oldu -', apiError.message);
-                    }
-                    
-                    // Tamamen sayfayı yeniden yükleyerek giriş sayfasına yönlendir
-                    console.log('UserMenu: Oturum başarıyla kapatıldı, giriş sayfasına yönlendiriliyor...');
-                    window.location.href = '/giris?fresh=' + new Date().getTime();
-                  } catch (error) {
-                    console.error('UserMenu: Çıkış işlemi sırasında hata -', error.message);
-                    // Hata durumunda da temizlik işlemlerini yap ve yönlendir
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    document.cookie.split(';').forEach(cookie => {
-                      const eqPos = cookie.indexOf('=');
-                      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-                      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-                    });
-                    window.location.href = '/giris?fresh=' + new Date().getTime();
-                  }
-                };
-                
-                // Logout işlemini başlat
-                performLogout();
+                // Tüm cookie'leri temizle
+                document.cookie.split(';').forEach(cookie => {
+                  const eqPos = cookie.indexOf('=');
+                  const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                });
+
+                // Sayfayı tamamen yenile ve giriş sayfasına yönlendir
+                setTimeout(() => {
+                  window.location.replace('/giris?fresh=' + new Date().getTime());
+                }, 100);
               }}
             >
-              <FaSignOutAlt className="h-5 w-5 mr-3 text-red-400 group-hover:text-white" />
+              <svg 
+                stroke="currentColor" 
+                fill="currentColor" 
+                strokeWidth="0" 
+                viewBox="0 0 512 512" 
+                className="h-5 w-5 mr-3 text-red-400 group-hover:text-white" 
+                height="1em" 
+                width="1em" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v192c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"></path>
+              </svg>
               <span>Oturumu Kapat</span>
-            </button>
+            </a>
           </div>
         </div>
       )}
