@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
@@ -113,10 +114,17 @@ export default function RegisterPage() {
       // Başarılı kayıt
       setIsSuccess(true)
       
-      // 3 saniye sonra giriş sayfasına yönlendir
+      // Bilgi mesajı olarak kullanıcıya göster
+      const message = data.message || 'Kaydınız başarıyla oluşturuldu. Lütfen e-posta adresinizi doğrulayın.';
+      
+      // Kullanıcıya mesajı göster
+      setRegisterError('');
+      setSuccessMessage(message);
+      
+      // 5 saniye sonra giriş sayfasına yönlendir
       setTimeout(() => {
         router.push('/giris')
-      }, 3000)
+      }, 5000)
       
     } catch (error: unknown) {
       const errorMessage = error instanceof Error 
@@ -220,7 +228,7 @@ export default function RegisterPage() {
                 <svg className="mx-auto h-12 w-12 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <p className="mt-2 text-green-300">Kaydınız başarıyla tamamlandı!</p>
+                <p className="mt-2 text-green-300">{successMessage}</p>
               </div>
               <p className="text-gray-300">Giriş sayfasına yönlendiriliyorsunuz...</p>
               <Link href="/giris" className="mt-6 inline-block text-cyan-400 hover:text-cyan-300">

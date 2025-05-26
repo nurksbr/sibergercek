@@ -274,36 +274,6 @@ function Hero() {
       {/* Kod akışı arka plan deseni */}
       <div className="absolute inset-0 z-0 opacity-5 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900 via-gray-900 to-gray-900"></div>
       
-      {/* Kayan Tehdit Uyarı Bandı */}
-      <div className="relative z-20 bg-gray-800 text-white overflow-hidden py-2 px-4 border-b border-cyan-700/50">
-        <div className="flex whitespace-nowrap" style={{ transform: `translateX(${scroll}px)` }}>
-          <div className="flex items-center mx-8">
-            <span className="inline-block w-3 h-3 bg-cyan-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="font-medium text-cyan-100">Son 24 saatte {attackCount.toLocaleString('tr-TR')} siber saldırı tespit edildi</span>
-          </div>
-          <div className="flex items-center mx-8">
-            <span className="inline-block w-3 h-3 bg-cyan-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="font-medium text-cyan-100">Fidye yazılım saldırıları %23 arttı</span>
-          </div>
-          <div className="flex items-center mx-8">
-            <span className="inline-block w-3 h-3 bg-cyan-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="font-medium text-cyan-100">Kritik altyapılara yönelik saldırılar devam ediyor</span>
-          </div>
-          <div className="flex items-center mx-8">
-            <span className="inline-block w-3 h-3 bg-cyan-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="font-medium text-cyan-100">Yeni phishing kampanyası tespit edildi</span>
-          </div>
-          <div className="flex items-center mx-8">
-            <span className="inline-block w-3 h-3 bg-cyan-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="font-medium text-cyan-100">Son 24 saatte {attackCount.toLocaleString('tr-TR')} siber saldırı tespit edildi</span>
-          </div>
-          <div className="flex items-center mx-8">
-            <span className="inline-block w-3 h-3 bg-cyan-500 rounded-full mr-2 animate-pulse"></span>
-            <span className="font-medium text-cyan-100">Fidye yazılım saldırıları %23 arttı</span>
-          </div>
-        </div>
-      </div>
-      
       <div className="relative z-10 mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
           <div className="max-w-4xl">

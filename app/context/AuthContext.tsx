@@ -10,6 +10,7 @@ export type User = {
   email: string;
   name: string;
   role: string;
+  isAdmin?: boolean; // Admin olup olmadığını belirten özellik
 };
 
 // Auth context tipleri

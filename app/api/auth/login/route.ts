@@ -34,10 +34,27 @@ const TEST_USERS: TestUser[] = [
   {
     id: 'user123',
     email: 'fevziyenur@icloud.com',
-    name: 'Fevziye Nur',
+    name: 'Fevziye Nur ★ ADMIN ★',
     password: 'password123',
-    role: 'USER',
+    role: 'ADMIN',
     alternatePasswords: ['Fevziye2002', 'password'] // Alternatif şifreler
+  },
+  // Ek admin kullanıcısı
+  {
+    id: 'admin_user',
+    email: 'fevziyenurksbr1@gmail.com',
+    name: 'Fevziye Nur (Admin)',
+    password: 'password',
+    role: 'ADMIN',
+    alternatePasswords: ['123456', 'admin']
+  },
+  // Fırat Üniversitesi kullanıcısı
+  {
+    id: 'user_firat',
+    email: '230542021@firat.edu.tr',
+    name: 'Fırat Öğrenci',
+    password: 'Nur1234.',
+    role: 'USER'
   },
   // Diğer test kullanıcıları - herhangi bir e-posta ile giriş yapılabilmesi için
   {
@@ -45,7 +62,7 @@ const TEST_USERS: TestUser[] = [
     email: 'admin@example.com',
     name: 'Admin Kullanıcı',
     password: 'admin123',
-    role: 'ADMIN'
+    role: 'USER'
   },
   {
     id: 'user789',
@@ -141,6 +158,10 @@ export async function POST(request: NextRequest) {
         // Şifre kontrolü
         if (!(passwordMatch || isDefaultPassword || (isWildcardUser && password === 'password'))) {
           console.log('API: Şifre doğrulama başarısız');
+          console.log('API: Beklenen şifre:', testUser.password);
+          console.log('API: Girilen şifre:', password);
+          console.log('API: Eşleşme durumu:', password === testUser.password);
+          
           return new NextResponse(
             JSON.stringify({ error: 'Geçersiz kimlik bilgileri', success: false }),
             { 
@@ -176,6 +197,7 @@ export async function POST(request: NextRequest) {
           email: email,
           name: userName,
           role: testUser.role,
+          isAdmin: testUser.role === 'ADMIN' // Admin rolüne sahipse isAdmin özelliğini true olarak ayarla
         };
 
         console.log('API: Test kullanıcısı için token oluşturuldu, yanıt hazırlanıyor');
@@ -244,6 +266,7 @@ export async function POST(request: NextRequest) {
       email: email,
       name: dynamicUserName,
       role: 'USER',
+      isAdmin: false // Dinamik kullanıcılar admin değildir
     };
 
     console.log('API: Dinamik kullanıcı için token oluşturuldu, yanıt hazırlanıyor');

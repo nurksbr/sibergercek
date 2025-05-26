@@ -11,7 +11,7 @@ import Link from 'next/link';
 
 export default function UserMenu() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const ref = useRef(null);
@@ -44,7 +44,6 @@ export default function UserMenu() {
         document.body.appendChild(portalContainer);
       }
       
-      console.log('UserMenu: Portal container oluşturuldu', portalContainer);
       setMenuPortal(portalContainer);
     }
   }, []);
@@ -111,40 +110,7 @@ export default function UserMenu() {
 
   // Görüntülenecek kullanıcı bilgisi
   const currentUser = user || localUser;
-
-  // Dışarıya tıklandığında menüyü kapat
-  useClickOutside(ref, () => {
-    setIsOpen(false);
-    setIsSettingsOpen(false);
-  });
-
-  // Sayfa değişikliği için navigation işlevi - Next.js router kullanarak düzeltildi
-  const handleNavigation = (path) => {
-    // Menüleri kapat
-    setIsOpen(false);
-    setIsSettingsOpen(false);
-    
-    // Debug için konsola yaz
-    console.log(`UserMenu: ${path} adresine yönlendiriliyor...`);
-    
-    // Next.js router kullanarak yönlendirme yap - doğrudan çağrı
-    try {
-      // Yönlendirme öncesi küçük bir gecikme ekle (100ms)
-      setTimeout(() => {
-        router.push(path);
-      }, 100);
-    } catch (error) {
-      console.error('Yönlendirme hatası:', error);
-      // Hata durumunda window.location ile yönlendir
-      window.location.href = path;
-    }
-  };
-
-  // Kullanıcı yoksa veya SSR ise menüyü gösterme
-  if (!isMounted || !currentUser) {
-    return null;
-  }
-
+  
   // Kullanıcı adının ilk harfini ve soyadının ilk harfini göster
   // Eğer bu bilgiler yoksa e-postanın ilk harfini göster
   const getInitials = () => {
@@ -158,12 +124,47 @@ export default function UserMenu() {
     return '?';
   };
 
+  // Kullanıcının admin olup olmadığını kontrol et (role veya isAdmin kullanarak)
+  const isUserAdmin = currentUser?.role === 'ADMIN' || currentUser?.isAdmin === true;
+
+  // Dışarıya tıklandığında menüyü kapat
+  useClickOutside(ref, () => {
+    setIsOpen(false);
+    setIsSettingsOpen(false);
+  });
+
+  // Sayfa değişikliği için navigation işlevi - Next.js router kullanarak düzeltildi
+  const handleNavigation = (path) => {
+    // Menüleri kapat
+    setIsOpen(false);
+    setIsSettingsOpen(false);
+    
+    // Gereksiz debug logu kaldırıyorum
+    
+    // Next.js router kullanarak yönlendirme yap - doğrudan çağrı
+    try {
+      // Yönlendirme öncesi küçük bir gecikme ekle (100ms)
+      setTimeout(() => {
+        router.push(path);
+      }, 100);
+    } catch (error) {
+      console.error('UserMenu: Yönlendirme hatası -', error.message);
+      // Hata durumunda window.location ile yönlendir
+      window.location.href = path;
+    }
+  };
+
+  // Kullanıcı yoksa veya SSR ise menüyü gösterme
+  if (!isMounted || !currentUser) {
+    return null;
+  }
+
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
         onClick={() => {
-          console.log('UserMenu toggle button clicked, isOpen:', !isOpen);
+          // Gereksiz log mesajını kaldırıyorum
           setIsOpen(!isOpen);
           if (!isOpen) {
             setIsSettingsOpen(false);
@@ -176,7 +177,10 @@ export default function UserMenu() {
         <span className="sr-only">Kullanıcı menüsünü aç</span>
         <div className="flex items-center px-3 py-2 rounded-md text-white hover:bg-gray-800 transition">
           <FaUserCircle className="w-6 h-6 text-gray-300 mr-2" />
-          <span className="max-w-[120px] truncate">{currentUser?.name}</span>
+          <span className="max-w-[120px] truncate">
+            {currentUser?.name}
+            {isUserAdmin && <span className="ml-1 text-red-400">(ADMİN)</span>}
+          </span>
         </div>
       </button>
 
@@ -184,13 +188,18 @@ export default function UserMenu() {
         <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 z-50">
           {/* Kullanıcı bilgileri */}
           <div className="px-4 py-3">
-            <p className="text-sm text-gray-300">Giriş yapan kullanıcı</p>
-            <p className="text-sm font-medium text-white truncate">{currentUser?.email || 'Email bilgisi yok'}</p>
-            {currentUser?.role === 'ADMIN' && (
-              <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-cyan-800 text-cyan-100">
-                Yönetici
-              </span>
-            )}
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-300">Giriş yapan kullanıcı</p>
+              {isUserAdmin && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-600 text-white">
+                  ADMİN
+                </span>
+              )}
+            </div>
+            <p className="text-sm font-medium text-white truncate mt-1">{currentUser?.email || 'Email bilgisi yok'}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              Rol: ADMİN
+            </p>
           </div>
           
           {/* Menü öğeleri */}
@@ -210,15 +219,14 @@ export default function UserMenu() {
           </div>
           
           {/* Admin menüsü */}
-          {currentUser?.role === 'ADMIN' && (
+          {isUserAdmin && (
             <div className="py-1">
               <button
                 className="group flex items-center w-full text-left px-4 py-2 text-sm text-gray-100 hover:bg-gray-700"
                 onClick={() => handleNavigation('/admin-panel')}
-                role="menuitem"
               >
                 <FaShieldAlt className="h-5 w-5 mr-3 text-gray-400 group-hover:text-cyan-400" />
-                Yönetim Paneli
+                ADMİN Paneli
               </button>
             </div>
           )}
@@ -226,37 +234,80 @@ export default function UserMenu() {
           {/* Çıkış */}
           <div className="py-1 border-t border-gray-700">
             <button
-              className="group flex items-center w-full text-left px-4 py-2 text-sm text-gray-100 hover:bg-gray-700"
-              onClick={(e) => {
-                e.preventDefault();
-                console.log('Oturumu Kapat butonuna tıklandı');
-                // Direkt temizlik işlemleri
-                localStorage.removeItem('cyberly_user');
-                localStorage.removeItem('cyberly_token');
+              type="button"
+              className="group flex items-center w-full text-left px-4 py-3 text-sm text-white hover:bg-red-600 hover:text-white transition-colors duration-200 cursor-pointer font-medium"
+              onClick={() => {
+                console.log('UserMenu: Oturumu Kapat butonuna tıklandı');
                 
-                // Cookie'yi temizle
-                document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                console.log('LocalStorage ve cookie temizlendi');
-                
-                // UI state'lerini güncelle
+                // UI durumunu hemen güncelle
                 setIsOpen(false);
-                setLocalUser(null);
                 
-                // Çıkış işlemini gerçekleştir
-                logout().then(() => {
-                  console.log('Logout başarıyla tamamlandı, giriş sayfasına yönlendiriliyor');
-                  // Giriş sayfasına tarayıcı API'si ile yönlendir
-                  window.location.href = '/giris';
-                }).catch(error => {
-                  console.error('Logout hatası:', error);
-                  // Hata olsa bile giriş sayfasına yönlendir
-                  window.location.href = '/giris';
-                });
+                // Logout işlemini gerçekleştir
+                const performLogout = async () => {
+                  try {
+                    // LocalStorage ve diğer depoları tamamen temizle
+                    localStorage.removeItem('cyberly_user');
+                    localStorage.removeItem('cyberly_token');
+                    sessionStorage.removeItem('cyberly_user');
+                    sessionStorage.removeItem('cyberly_token');
+                    
+                    // Tüm sibergercek ile ilgili lokalstroage verilerini temizle
+                    Object.keys(localStorage).forEach(key => {
+                      if (key.startsWith('cyberly_')) {
+                        localStorage.removeItem(key);
+                      }
+                    });
+                    
+                    // Tüm cookie'leri temizle
+                    document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    document.cookie.split(';').forEach(cookie => {
+                      const eqPos = cookie.indexOf('=');
+                      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                    });
+                    
+                    // Özel olay tetikle - diğer bileşenlerin güncellenebilmesi için
+                    const authEvent = new CustomEvent(AUTH_CHANGE_EVENT, { 
+                      detail: { user: null, loggedIn: false } 
+                    });
+                    window.dispatchEvent(authEvent);
+                    
+                    try {
+                      // API üzerinden çıkış işlemi - token cookie'sini temizler
+                      await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                      });
+                    } catch (apiError) {
+                      console.error('UserMenu: API logout işlemi başarısız oldu -', apiError.message);
+                    }
+                    
+                    // Tamamen sayfayı yeniden yükleyerek giriş sayfasına yönlendir
+                    console.log('UserMenu: Oturum başarıyla kapatıldı, giriş sayfasına yönlendiriliyor...');
+                    window.location.href = '/giris?fresh=' + new Date().getTime();
+                  } catch (error) {
+                    console.error('UserMenu: Çıkış işlemi sırasında hata -', error.message);
+                    // Hata durumunda da temizlik işlemlerini yap ve yönlendir
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    document.cookie.split(';').forEach(cookie => {
+                      const eqPos = cookie.indexOf('=');
+                      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                    });
+                    window.location.href = '/giris?fresh=' + new Date().getTime();
+                  }
+                };
+                
+                // Logout işlemini başlat
+                performLogout();
               }}
-              role="menuitem"
             >
-              <FaSignOutAlt className="h-5 w-5 mr-3 text-gray-400 group-hover:text-cyan-400" />
-              Oturumu Kapat
+              <FaSignOutAlt className="h-5 w-5 mr-3 text-red-400 group-hover:text-white" />
+              <span>Oturumu Kapat</span>
             </button>
           </div>
         </div>

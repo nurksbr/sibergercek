@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/app/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-// import * as bcrypt from 'bcrypt'; // Artık kullanmıyoruz
+import bcrypt from 'bcrypt';
+import { sendVerificationEmail } from '@/lib/email';
+import { randomBytes } from 'crypto';
 
 // Kayıt şeması doğrulama
 const registerSchema = z.object({
@@ -45,7 +47,6 @@ export async function POST(request: NextRequest) {
     }
     
     const { name, email, password } = result.data;
-    console.log('API: Kullanıcı kayıt verileri doğrulandı:', { name, email, password }); // Şifreyi de göster
     
     // E-posta adresi zaten kullanılıyor mu kontrol et
     console.log('API: E-posta kontrolü yapılıyor:', email);
@@ -68,8 +69,14 @@ export async function POST(request: NextRequest) {
       throw new Error('Veritabanı sorgusu sırasında hata oluştu');
     }
     
-    // Şifreyi doğrudan kullan, hashleme yapma
-    console.log('API: Şifre açık metin olarak kaydediliyor:', password);
+    // Şifreyi hashle
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Doğrulama token'ı oluştur
+    const verificationToken = randomBytes(32).toString('hex');
+    
+    // Token için son geçerlilik tarihi (24 saat)
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     
     // Kullanıcıyı oluştur
     console.log('API: Veritabanına kullanıcı kaydediliyor');
@@ -78,16 +85,31 @@ export async function POST(request: NextRequest) {
         data: {
           name,
           email,
-          password, // Şifreyi açık metin olarak kaydet
-          role: 'USER', // Varsayılan rol USER olarak ayarlandı
-          backupCodes: JSON.stringify([]), // SQLite için String tipinde boş bir array
+          password: hashedPassword,
+          role: 'USER',
+          isEmailVerified: false,
+          emailVerificationToken: verificationToken,
+          emailVerificationExpires: verificationExpires,
+          backupCodes: JSON.stringify([]),
         },
       });
       
-      console.log('API: Kullanıcı başarıyla oluşturuldu:', user); // Tüm kullanıcı bilgilerini göster
+      console.log('API: Kullanıcı başarıyla oluşturuldu:', user.id);
+      
+      // Doğrulama e-postası gönder
+      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/email-verify?token=${verificationToken}`;
+      
+      await sendVerificationEmail(email, verificationUrl, name);
       
       return NextResponse.json(
-        { message: 'Kullanıcı başarıyla oluşturuldu', user },
+        { 
+          message: 'Kullanıcı başarıyla oluşturuldu. Lütfen e-posta adresinizi doğrulayın.',
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email
+          }
+        },
         { status: 201 }
       );
     } catch (createError) {

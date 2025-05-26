@@ -34,7 +34,7 @@ function Navbar() {
   
   // Yerel state'ler
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const pathname = usePathname();
+  const pathname = usePathname() || '/';
   const [, forceUpdate] = useReducer(x => x + 1, 0);
   
   // Giriş durumu ve yerel kullanıcı - başlangıçta false olarak ayarla
@@ -48,6 +48,18 @@ function Navbar() {
   const prevUserRef = useRef(null);
   
   const router = useRouter();
+  
+  // Aktif link kontrolü için gelişmiş fonksiyon
+  const isLinkActive = (path) => {
+    if (!pathname) return false;
+    // Tam eşleşme
+    if (pathname === path) return true;
+    // Ana sayfa kontrolü (sadece / için)
+    if (path === '/' && pathname === '/') return true;
+    // Alt sayfalar için kontrol
+    if (path !== '/' && pathname.startsWith(path + '/')) return true;
+    return false;
+  };
   
   // Bileşen mount edildikten sonra isLoggedIn durumunu kontrol et
   useEffect(() => {
@@ -137,12 +149,12 @@ function Navbar() {
         const isAuth = await checkAuth();
         if (mounted) {
           if (isAuth !== isLoggedIn) {
-            console.log('Navbar: checkAuth ile oturum durumu güncellendi:', isAuth);
+            // Log mesajını kaldıralım
             setIsLoggedIn(isAuth);
           }
         }
       } catch (error) {
-        console.error('Navbar oturum kontrolü hatası:', error);
+        console.error('Navbar: Oturum kontrolü sırasında hata -', error.message);
       }
     };
     
@@ -177,19 +189,17 @@ function Navbar() {
 
   // Link prefetching için - sayfa yüklendiğinde en sık ziyaret edilen sayfaları önceden yükle
   useEffect(() => {
-    // Yaygın sayfaları preload için link elementleri ekle
-    const preloadLinks = ['/hakkimizda', '/blog']
-    preloadLinks.forEach(path => {
-      if (pathname !== path) {
-        const link = document.createElement('link')
-        link.rel = 'preload'
-        link.as = 'fetch'
-        link.href = path
-        link.crossOrigin = 'anonymous'
-        document.head.appendChild(link)
-      }
-    })
+    // Next.js'in kendi prefetch mekanizmasını kullanıyoruz,
+    // bu nedenle manuel preload linkleri kaldırıyoruz
+    // preload link mekanizması uyarılara neden olduğu için kaldırıyoruz
   }, [pathname])
+
+  // Önceki useEffect yerine pathname değişkeninin logging'i için bir kullanım ekleyelim
+  useEffect(() => {
+    if (isMounted && process.env.NODE_ENV === 'development') {
+      console.log('Navbar: Mevcut pathname değeri:', pathname);
+    }
+  }, [pathname, isMounted]);
 
   const scrollToContact = (e) => {
     e.preventDefault()
@@ -202,38 +212,80 @@ function Navbar() {
 
   const handleLogout = async () => {
     try {
-      // Önce localStorage'ı temizle
-      localStorage.removeItem('cyberly_user');
+      console.log('Navbar: Oturum kapatma işlemi başlatıldı');
       
-      // UI durumunu güncelle
+      // UI durumunu hemen güncelle
       setIsMenuOpen(false);
       setIsLoggedIn(false);
       setLocalUser(null);
       
-      // Auth context üzerinden çıkış işlemi
-      await logout();
-      
-      // Giriş sayfasına yönlendir
-      router.push('/giris');
-      
-      // Sayfa yenilenirse her şeyin sıfırlanmasını sağla
-      console.log('Kullanıcı başarıyla çıkış yaptı');
-    } catch (error) {
-      console.error('Çıkış yapılırken hata:', error);
-      // Hata durumunda zorla çıkış yap
+      // LocalStorage ve diğer depoları tamamen temizle
       localStorage.removeItem('cyberly_user');
+      localStorage.removeItem('cyberly_token');
+      sessionStorage.removeItem('cyberly_user');
+      sessionStorage.removeItem('cyberly_token');
+      
+      // Tüm sibergercek ile ilgili lokalstroage verilerini temizle
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('cyberly_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Tüm cookie'leri temizle
       document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      window.location.href = '/giris';
+      document.cookie.split(';').forEach(cookie => {
+        const eqPos = cookie.indexOf('=');
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+      
+      // Özel olay tetikle - diğer bileşenlerin güncellenebilmesi için
+      const authEvent = new CustomEvent(AUTH_CHANGE_EVENT, { 
+        detail: { user: null, loggedIn: false } 
+      });
+      window.dispatchEvent(authEvent);
+      
+      try {
+        // Auth context üzerinden çıkış işlemi
+        await logout();
+        console.log('Navbar: Context logout işlemi başarıyla tamamlandı');
+      } catch (apiError) {
+        console.error('Navbar: Context logout işleminde hata -', apiError.message);
+        // API hatası olsa bile kullanıcı çıkış yapmış olacak
+      }
+      
+      // Tamamen sayfayı yeniden yükleyerek giriş sayfasına yönlendir
+      console.log('Navbar: Oturum başarıyla kapatıldı, giriş sayfasına yönlendiriliyor...');
+      window.location.href = '/giris?fresh=' + new Date().getTime();
+    } catch (error) {
+      console.error('Navbar: Oturum kapatma işleminde hata -', error.message);
+      // Hata durumunda da temizlik işlemlerini yap ve yönlendir
+      localStorage.clear();
+      sessionStorage.clear();
+      document.cookie.split(';').forEach(cookie => {
+        const eqPos = cookie.indexOf('=');
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+      window.location.href = '/giris?fresh=' + new Date().getTime();
     }
   }
 
   const handleMobileNavigation = (path) => (e) => {
     e.preventDefault();
     setIsMenuOpen(false);
-    console.log(`Navbar: ${path} adresine yönlendiriliyor...`);
     setTimeout(() => {
       router.push(path);
     }, 100);
+  };
+
+  // Admin durumunu vurgulayan bir class belirleme fonksiyonu
+  const getAdminClass = () => {
+    if (currentUser?.role === 'ADMIN') {
+      return "text-red-400 font-bold";
+    }
+    return "";
   };
 
   return (
@@ -261,12 +313,12 @@ function Navbar() {
           <div className="hidden md:flex flex-grow items-center justify-between mx-4">
             <div className="flex items-center w-full justify-evenly px-2">
               {NAV_LINKS.map((link) => {
-                const isActive = pathname === link.path
+                const isActive = isLinkActive(link.path)
                 return (
                   <Link 
                     key={link.path}
                     href={link.path} 
-                    prefetch={true}
+                    prefetch={link.path === '/hakkimizda' || link.path === '/blog' || link.path === '/'}
                     className={`flex items-center px-2 py-1.5 text-sm font-semibold hover:bg-gray-800/30 hover:text-cyan-400 transition-colors rounded-md ${
                       isActive ? 'text-cyan-400 bg-gray-800/30' : 'text-white'
                     }`}
@@ -296,12 +348,12 @@ function Navbar() {
               <>
                 {/* Kullanıcı giriş yaptıysa */}
                 {isLoggedIn && USER_LINKS.map((link) => {
-                  const isActive = pathname === link.path
+                  const isActive = isLinkActive(link.path)
                   return (
                     <Link 
                       key={link.path}
                       href={link.path} 
-                      prefetch={true}
+                      prefetch={false}
                       className={`flex items-center px-2 py-1.5 text-sm font-semibold hover:bg-gray-800/30 hover:text-cyan-400 transition-colors rounded-md ${
                         isActive ? 'text-cyan-400 bg-gray-800/30' : 'text-white'
                       }`}
@@ -319,12 +371,14 @@ function Navbar() {
                   <>
                     <Link 
                       href="/giris" 
+                      prefetch={true}
                       className="px-2 py-1.5 text-sm font-semibold hover:bg-gray-800/30 hover:text-cyan-400 transition-colors rounded-md"
                     >
                       Giriş Yap
                     </Link>
                     <Link 
                       href="/uye-ol" 
+                      prefetch={true}
                       className="px-2 py-1.5 text-sm font-semibold bg-cyan-500/80 hover:bg-cyan-600 transition-colors rounded-md"
                     >
                       Üye Ol
@@ -335,7 +389,6 @@ function Navbar() {
                 {/* Kullanıcı giriş yaptıysa kullanıcı menüsünü göster */}
                 {isLoggedIn && (
                   <div>
-                    {console.log('Navbar: Kullanıcı giriş yapmış, UserMenu gösteriliyor', isLoggedIn, currentUser)}
                     <UserMenu />
                   </div>
                 )}
@@ -381,14 +434,14 @@ function Navbar() {
       >
         <div className="px-2 pt-1 pb-2 space-y-1 sm:px-2">
           {NAV_LINKS.map((link) => {
-            const isActive = pathname === link.path
+            const isMobileNavActive = isLinkActive(link.path)
             return (
               <Link 
                 key={link.path}
                 href={link.path} 
-                prefetch={true}
+                prefetch={link.path === '/hakkimizda' || link.path === '/blog' || link.path === '/'}
                 className={`flex items-center block px-2 py-1 rounded-md text-sm font-semibold hover:bg-gray-800/30 hover:text-cyan-400 transition-colors ${
-                  isActive ? 'text-cyan-400 bg-gray-800/30' : 'text-white'
+                  isMobileNavActive ? 'text-cyan-400 bg-gray-800/30' : 'text-white'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -412,14 +465,14 @@ function Navbar() {
             <>
               {/* Kullanıcı giriş yaptıysa gösterilecek menü öğeleri */}
               {isLoggedIn && USER_LINKS.map((link) => {
-                const isActive = pathname === link.path
+                const isMobileUserLinkActive = isLinkActive(link.path)
                 return (
                   <Link 
                     key={link.path}
                     href={link.path} 
-                    prefetch={true}
+                    prefetch={false}
                     className={`flex items-center block px-2 py-1 rounded-md text-sm font-semibold hover:bg-gray-800/30 hover:text-cyan-400 transition-colors ${
-                      isActive ? 'text-cyan-400 bg-gray-800/30' : 'text-white'
+                      isMobileUserLinkActive ? 'text-cyan-400 bg-gray-800/30' : 'text-white'
                     }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -436,6 +489,7 @@ function Navbar() {
                 <>
                   <Link 
                     href="/giris" 
+                    prefetch={true}
                     className="block px-2 py-1 mt-2 rounded-md text-sm font-semibold hover:bg-gray-800/30 hover:text-cyan-400 transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -443,6 +497,7 @@ function Navbar() {
                   </Link>
                   <Link 
                     href="/uye-ol" 
+                    prefetch={true}
                     className="block px-2 py-1 mt-2 rounded-md text-sm font-semibold bg-cyan-500/80 hover:bg-cyan-600 transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -457,6 +512,9 @@ function Navbar() {
                   <div className="border-t border-gray-700 my-2"></div>
                   <div className="px-2 py-1 text-sm font-semibold text-cyan-400">
                     {currentUser?.name || currentUser?.email?.split('@')[0] || 'Kullanıcı'}
+                    {currentUser?.role === 'ADMIN' && (
+                      <span className="ml-1 px-1 py-0.5 text-xs font-bold bg-red-600 text-white rounded">ADMIN</span>
+                    )}
                   </div>
                   <button 
                     className="flex items-center w-full text-left px-2 py-1 rounded-md text-sm font-semibold hover:bg-gray-800/30 hover:text-cyan-400 transition-colors"
@@ -482,26 +540,10 @@ function Navbar() {
                     className="flex items-center w-full text-left px-2 py-1 rounded-md text-sm font-semibold text-red-400 hover:bg-gray-800/30 transition-colors"
                     onClick={(e) => {
                       e.preventDefault();
-                      console.log('Mobil menü: Çıkış Yap butonuna tıklandı');
-                      // Direkt temizlik işlemleri
-                      localStorage.removeItem('cyberly_user');
-                      localStorage.removeItem('cyberly_token');
-                      // UI durumunu güncelle
-                      setIsMenuOpen(false);
-                      setIsLoggedIn(false);
-                      setLocalUser(null);
-                      // Çıkış işlemini çağır
-                      logout().then(() => {
-                        console.log('Mobil menü: Logout başarıyla tamamlandı');
-                        // Cookie'yi de temizle
-                        document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                        // Sayfayı giriş sayfasına yönlendir
-                        window.location.href = '/giris';
-                      }).catch(error => {
-                        console.error('Mobil menü: Logout hatası:', error);
-                        // Hata olsa bile giriş sayfasına yönlendir
-                        window.location.href = '/giris';
-                      });
+                      console.log('Navbar Mobil: Oturum kapatma butonuna tıklandı');
+                      
+                      // Merkezi oturum kapatma fonksiyonunu çağır
+                      handleLogout();
                     }}
                   >
                     Çıkış Yap
