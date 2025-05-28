@@ -263,7 +263,7 @@ function Hero() {
   }, [])
 
   return (
-    <div className="relative overflow-hidden bg-gray-900">
+    <div className="relative overflow-hidden bg-gray-900 w-full">
       {/* Background decoration */}
       <div className="absolute inset-0 z-0 opacity-20">
         <div className="absolute -bottom-1/4 -right-1/4 h-96 w-96 rounded-full bg-cyan-600 blur-3xl"></div>
@@ -274,7 +274,7 @@ function Hero() {
       {/* Kod akışı arka plan deseni */}
       <div className="absolute inset-0 z-0 opacity-5 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900 via-gray-900 to-gray-900"></div>
       
-      <div className="relative z-10 mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto py-12 px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="flex flex-col items-center text-center">
           <div className="max-w-4xl">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-wide">
@@ -284,17 +284,17 @@ function Hero() {
           </div>
           
           {/* Animasyonlu Siber Tehdit Haritası */}
-          <div className="mt-12 mb-12 w-full">
+          <div className="mt-12 mb-12 w-full max-w-full">
             <div className="relative w-full border border-gray-700/50 rounded-lg overflow-hidden bg-black">
               <canvas 
                 ref={canvasRef} 
                 width={1200} 
                 height={600} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover max-w-full"
               ></canvas>
 
               {/* Harita Başlığı */}
-              <div className="absolute top-3 left-3 right-3 flex justify-between items-center">
+              <div className="absolute top-3 left-3 right-3 flex justify-between items-center flex-wrap gap-2">
                 <div className="bg-gray-900/80 backdrop-blur-sm py-2 px-4 rounded-md border border-cyan-700/50">
                   <h2 className="text-lg font-bold text-cyan-300">CYBERLY TEHDİT HARİTASI</h2>
                 </div>
@@ -309,7 +309,7 @@ function Hero() {
               </div>
               
               {/* Sol İstatistik Paneli */}
-              <div className="absolute top-20 left-3 bg-gray-900/80 backdrop-blur-sm py-3 px-4 rounded-md border border-cyan-700/50 w-64">
+              <div className="absolute top-20 left-3 bg-gray-900/80 backdrop-blur-sm py-3 px-4 rounded-md border border-cyan-700/50 w-64 max-w-[calc(100%-24px)]">
                 <div className="mb-4">
                   <h3 className="text-xs font-semibold text-gray-400">EN ÇOK SALDIRI ALAN ÜLKE</h3>
                   <p className="text-xl font-bold text-cyan-300">{mostAttackedCountry}</p>
@@ -359,7 +359,7 @@ function Hero() {
               </div>
               
               {/* Alt Bilgi Paneli */}
-              <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center">
+              <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center flex-wrap gap-2">
                 <div className="bg-gray-900/80 backdrop-blur-sm py-2 px-4 rounded-md border border-cyan-700/50">
                   <div className="flex items-center">
                     <span className="inline-block w-2 h-2 bg-cyan-500 rounded-full mr-2 animate-pulse"></span>

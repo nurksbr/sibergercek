@@ -58,7 +58,7 @@ const MatrixRain = () => {
   }, [])
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-16 pointer-events-none z-[2]">
+    <div className="fixed top-0 left-0 right-0 h-16 pointer-events-none z-[1]">
       <canvas
         ref={canvasRef}
         className="w-full h-full opacity-80"

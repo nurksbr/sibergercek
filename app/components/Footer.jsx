@@ -1,8 +1,8 @@
 function Footer() {
   return (
-    <footer className="bg-gray-900 text-white border-t border-cyan-700">
+    <footer className="bg-gray-900 text-white border-t border-cyan-700 w-full overflow-x-hidden">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="mb-8 md:mb-0">
             <h3 className="text-xl font-bold text-cyan-400 mb-4">CYBERLY</h3>
             <p className="text-gray-300 text-sm">

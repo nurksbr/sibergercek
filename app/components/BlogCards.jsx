@@ -32,7 +32,7 @@ function BlogCards() {
   ]
 
   return (
-    <section className="py-20 bg-gray-900">
+    <section className="py-20 bg-gray-900 w-full overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <p className="mt-2 text-3xl font-extrabold text-white sm:text-4xl">
@@ -43,7 +43,7 @@ function BlogCards() {
           </p>
         </div>
 
-        <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-16 grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {blogPosts.map((post, index) => (
             <div key={index} className="flex flex-col rounded-lg shadow-lg overflow-hidden bg-gray-800 border border-gray-700 hover:border-cyan-700 transition-colors">
               <div className="flex-shrink-0 relative h-48">

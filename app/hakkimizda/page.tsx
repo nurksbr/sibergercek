@@ -9,7 +9,7 @@ const teamMembers = [
     name: 'Fevziye Nur Kesebir',
     title: 'Kurucu & Geliştirici',
     bio: 'Siber güvenlik alanında tutkulu bir yazılım geliştirici olan Fevziye Nur, CYBERLY platformunun teknik altyapısını ve kullanıcı deneyimini oluşturdu.',
-    image: 'https://placehold.co/150',
+    image: 'https://media.licdn.com/dms/image/v2/D4D03AQEj7fTch9-gLg/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1716025629382?e=1753920000&v=beta&t=utLlgCWlIRWohjlTaCwXUzB7OYH8dHvFZUJi4Yjk_K8',
   },
   {
     name: 'Nisanur Gökçen Usta',

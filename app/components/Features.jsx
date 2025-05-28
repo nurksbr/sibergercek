@@ -78,7 +78,7 @@ function Features() {
   ]
 
   return (
-    <section className="py-24 bg-gray-900">
+    <section className="py-24 bg-gray-900 w-full overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <p className="mt-2 text-3xl font-extrabold text-white sm:text-4xl">
@@ -90,9 +90,9 @@ function Features() {
         </div>
 
         <div className="mt-20">
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:gap-8 md:gap-10 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
-              <div key={index} className="bg-gray-800 rounded-xl p-8 border border-gray-700 hover:border-cyan-700 transition-colors shadow-xl hover:border-glow">
+              <div key={index} className="bg-gray-800 rounded-xl p-6 sm:p-8 border border-gray-700 hover:border-cyan-700 transition-colors shadow-xl hover:border-glow">
                 <div className="w-12 h-12 rounded-md flex items-center justify-center bg-cyan-900 text-cyan-400">
                   {feature.icon}
                 </div>

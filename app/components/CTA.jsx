@@ -10,7 +10,7 @@ function CTA() {
   }
 
   return (
-    <section id="iletisim" className="relative py-24 bg-gray-900">
+    <section id="iletisim" className="relative py-24 bg-gray-900 w-full overflow-x-hidden">
       <div className="absolute inset-0 z-0 opacity-20">
         <div className="absolute -bottom-1/4 -right-1/4 h-96 w-96 rounded-full bg-cyan-600 blur-3xl"></div>
         <div className="absolute -top-1/4 -left-1/4 h-96 w-96 rounded-full bg-blue-600 blur-3xl"></div>
@@ -20,8 +20,8 @@ function CTA() {
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
-          <div className="px-6 py-12 sm:px-12 lg:px-16 lg:py-16">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               <div>
                 <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
                   <span className="block">Siber güvenliğinizi</span>
@@ -58,7 +58,7 @@ function CTA() {
                 </div>
               </div>
               
-              <div className="bg-gray-900 rounded-xl p-6 sm:p-10 border border-gray-700">
+              <div className="bg-gray-900 rounded-xl p-6 sm:p-8 border border-gray-700">
                 <h3 className="text-xl font-bold text-white mb-4">Bizimle İletişime Geçin</h3>
                 
                 <div className="mb-6 space-y-4">

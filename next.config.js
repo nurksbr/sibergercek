@@ -7,12 +7,16 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'placehold.co',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.licdn.com',
+      },
     ],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Next.js 15+ sürümünde appDir artık varsayılan olarak etkinleştirilmiştir
-}
+};
 
-module.exports = nextConfig 
+module.exports = nextConfig;
