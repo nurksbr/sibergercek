@@ -10,8 +10,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // Kullanıcı modeli - basitleştirilmiş versiyon
@@ -25,6 +25,8 @@ model User {
   emailVerificationToken   String?
   emailVerificationExpires DateTime?
   education                String? // Eğitim bilgisi
+  backupCodes              String? // Yedek kodlar JSON formatında saklanır
+  role                     String    @default("USER")
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
   accounts                 Account[]
@@ -37,12 +39,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -77,7 +79,7 @@ model Content {
   id        String   @id @default(cuid())
   title     String
   slug      String   @unique
-  content   String   @db.Text
+  content   String
   views     Int      @default(0)
   published Boolean  @default(false)
   createdAt DateTime @default(now())

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ClientWrapper from "./components/ClientWrapper";
 import { AuthProvider } from "./context/AuthContext";
+import { NextAuthProvider } from "./providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,11 +42,13 @@ export default function RootLayout({
         {/* Kod akışı animasyonu istemci tarafında render edilecek */}
         <ClientWrapper />
         
-        <AuthProvider>
-          <div className="relative z-20">
-            {children}
-          </div>
-        </AuthProvider>
+        <NextAuthProvider>
+          <AuthProvider>
+            <div className="relative z-20">
+              {children}
+            </div>
+          </AuthProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

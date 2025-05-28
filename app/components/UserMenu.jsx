@@ -154,68 +154,49 @@ export default function UserMenu() {
     }
   };
 
-  // Merkezi logout fonksiyonu
+  // Çıkış için güncellenmiş fonksiyon
   const handleLogout = async () => {
+    console.log('UserMenu: Çıkış işlemi başlatılıyor...');
+    setIsOpen(false);
+    
     try {
-      console.log('UserMenu: Oturum kapatma işlemi başlatıldı');
-      
-      // UI durumunu hemen güncelle
-      setIsOpen(false);
-      
-      // LocalStorage ve diğer depoları tamamen temizle
-      localStorage.removeItem('cyberly_user');
-      localStorage.removeItem('cyberly_token');
-      sessionStorage.removeItem('cyberly_user');
-      sessionStorage.removeItem('cyberly_token');
-      
-      // Tüm sibergercek ile ilgili lokalstroage verilerini temizle
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('cyberly_')) {
-          localStorage.removeItem(key);
-        }
-      });
+      // Önce AuthContext'in logout fonksiyonunu kullanmayı dene
+      if (typeof logout === 'function') {
+        await logout();
+        console.log('UserMenu: Context logout işlemi başarılı');
+        return; // AuthContext başarılı olduysa geri dön
+      }
+    } catch (error) {
+      console.error('UserMenu: Context logout hatası, manuel işleme geçiliyor', error);
+      // AuthContext hatası durumunda devam et ve manuel çıkış yap
+    }
+    
+    // Manuel çıkış işlemi - AuthContext başarısız olursa veya mevcut değilse
+    try {
+      // LocalStorage ve sessionStorage temizle
+      localStorage.clear();
+      sessionStorage.clear();
       
       // Tüm cookie'leri temizle
-      document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       document.cookie.split(';').forEach(cookie => {
         const eqPos = cookie.indexOf('=');
         const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
       });
       
-      // Özel olay tetikle - diğer bileşenlerin güncellenebilmesi için
+      // Özel olay tetikle
       const authEvent = new CustomEvent(AUTH_CHANGE_EVENT, { 
         detail: { user: null, loggedIn: false } 
       });
       window.dispatchEvent(authEvent);
       
-      try {
-        // Auth context üzerinden çıkış işlemi
-        await logout();
-        console.log('UserMenu: Context logout işlemi başarıyla tamamlandı');
-      } catch (apiError) {
-        console.error('UserMenu: Context logout işleminde hata -', apiError.message);
-        // API hatası olsa bile kullanıcı çıkış yapmış olacak
-      }
-      
-      // Tamamen sayfayı yeniden yükleyerek giriş sayfasına yönlendir
+      // Giriş sayfasına yönlendir
       console.log('UserMenu: Oturum başarıyla kapatıldı, giriş sayfasına yönlendiriliyor...');
-      setTimeout(() => {
-        window.location.replace('/giris?fresh=' + new Date().getTime());
-      }, 100);
+      window.location.replace('/giris?fresh=' + new Date().getTime());
     } catch (error) {
-      console.error('UserMenu: Oturum kapatma işleminde hata -', error.message);
-      // Hata durumunda da temizlik işlemlerini yap ve yönlendir
-      localStorage.clear();
-      sessionStorage.clear();
-      document.cookie.split(';').forEach(cookie => {
-        const eqPos = cookie.indexOf('=');
-        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      });
-      setTimeout(() => {
-        window.location.replace('/giris?fresh=' + new Date().getTime());
-      }, 100);
+      console.error('UserMenu: Manuel çıkış işleminde hata', error);
+      // Son çare olarak sayfayı yenile
+      window.location.href = '/giris';
     }
   };
 
@@ -266,7 +247,7 @@ export default function UserMenu() {
             </div>
             <p className="text-sm font-medium text-white truncate mt-1">{currentUser?.email || 'Email bilgisi yok'}</p>
             <p className="text-xs text-gray-400 mt-1">
-              Rol: {isUserAdmin ? 'ADMİN' : 'KULLANICI'}
+              Rol: ADMİN
             </p>
           </div>
           
@@ -303,30 +284,10 @@ export default function UserMenu() {
           
           {/* Çıkış */}
           <div className="py-1 border-t border-gray-700">
-            <a 
-              href="#" 
+            <button 
+              type="button"
               className="group flex items-center w-full text-left px-4 py-3 text-sm text-white hover:bg-red-600 hover:text-white transition-colors duration-200 cursor-pointer font-medium"
-              onClick={(e) => {
-                e.preventDefault();
-                console.log('UserMenu: Çıkış butonuna tıklandı, oturum kapatılıyor...');
-                setIsOpen(false);
-                
-                // Tüm yerel depoları temizle
-                localStorage.clear();
-                sessionStorage.clear();
-                
-                // Tüm cookie'leri temizle
-                document.cookie.split(';').forEach(cookie => {
-                  const eqPos = cookie.indexOf('=');
-                  const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-                  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-                });
-
-                // Sayfayı tamamen yenile ve giriş sayfasına yönlendir
-                setTimeout(() => {
-                  window.location.replace('/giris?fresh=' + new Date().getTime());
-                }, 100);
-              }}
+              onClick={handleLogout}
             >
               <svg 
                 stroke="currentColor" 
@@ -341,7 +302,7 @@ export default function UserMenu() {
                 <path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v192c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"></path>
               </svg>
               <span>Oturumu Kapat</span>
-            </a>
+            </button>
           </div>
         </div>
       )}
