@@ -14,19 +14,27 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+// Enum tanımlamaları
+enum Role {
+  USER
+  EDITOR
+  ADMIN
+}
+
 // Kullanıcı modeli - basitleştirilmiş versiyon
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
   password      String
+  image         String?   // Profil resmi için URL
   isAdmin       Boolean   @default(false)
   isEmailVerified Boolean  @default(false)
   emailVerificationToken String?
   emailVerificationExpires DateTime?
   education     String?   // Eğitim bilgisi
   backupCodes   String?   // Yedek kodlar JSON formatında saklanır
-  role          String    @default("USER")
+  role          Role      @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
@@ -66,13 +74,6 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-// Enum tanımlamaları
-enum Role {
-  USER
-  EDITOR
-  ADMIN
 }
 
 model Content {

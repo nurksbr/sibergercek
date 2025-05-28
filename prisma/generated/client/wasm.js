@@ -119,6 +119,7 @@ exports.Prisma.UserScalarFieldEnum = {
   name: 'name',
   email: 'email',
   password: 'password',
+  image: 'image',
   isAdmin: 'isAdmin',
   isEmailVerified: 'isEmailVerified',
   emailVerificationToken: 'emailVerificationToken',
@@ -178,7 +179,11 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-
+exports.Role = exports.$Enums.Role = {
+  USER: 'USER',
+  EDITOR: 'EDITOR',
+  ADMIN: 'ADMIN'
+};
 
 exports.Prisma.ModelName = {
   User: 'User',

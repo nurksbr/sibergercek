@@ -1,10 +1,17 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { Bell, Search } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function Navbar() {
   const { data: session } = useSession()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false })
+    router.push('/giris')
+  }
 
   return (
     <div className="h-16 border-b bg-white px-8">
@@ -31,6 +38,14 @@ export default function Navbar() {
               <p className="text-xs text-gray-500">{session?.user?.email}</p>
             </div>
           </div>
+          {session && (
+            <button 
+              onClick={handleLogout}
+              className="ml-4 px-3 py-1 text-sm bg-red-100 text-red-600 rounded hover:bg-red-200"
+            >
+              Çıkış
+            </button>
+          )}
         </div>
       </div>
     </div>
